@@ -1,21 +1,22 @@
 import Comms from "./SerialCom.mjs";
 
-let com = null
+const Serial = new Comms("COM3", 9600);
 
-com = new Comms("COM4", 9600);
-console.log("Logging.")
+Serial.on("CMM_DATA", async (data) => {
+    console.log(data);
+    console.log('\n');
+});
 
-await com.EnsureOpen();
+(async () => {
 
-try {
     while (true) {
-        var data = await com.ReadIfAvailable();
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
-        if (data) {
-            console.log(data);
-        }
+        await Serial.Send("ON;");
+
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        await Serial.Send("OFF;");
     }
-}
-catch (err) {
-    console.error(`FUCK: ${err}`);
-}
+
+})();
