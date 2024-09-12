@@ -1,7 +1,8 @@
 import Comms from "./SerialCom.mjs";
 
-const com = new Comms("Cfsdfdsf", 9600);
+let com = null
 
+com = new Comms("COM4", 9600);
 console.log("Logging.")
 
 await com.EnsureOpen();

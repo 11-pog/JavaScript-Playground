@@ -1,9 +1,10 @@
 import { SerialPort } from "serialport";
 import { EventEmitter } from "events";
+import { time } from "console";
 
-class Comms extends EventEmitter {
+class Comms /*extends EventEmitter*/ {
     constructor(port = "COM3", baudrate = 9600, OpenErrorMargin = 10) {
-        super();
+        //super();
 
         this.port = port;
         this.baud = baudrate;
@@ -13,7 +14,9 @@ class Comms extends EventEmitter {
         this.OpenErrorIndex = 0;
         this.OpenErrorMargin = OpenErrorMargin;
 
+
         this.Comms = new SerialPort({ path: port, baudRate: baudrate });
+
 
         this.Comms.on("open", () => {
             console.log(`Serial port ${port} is open`);
@@ -29,19 +32,29 @@ class Comms extends EventEmitter {
     }
 
     async begin() {
-        console.log("Porra");
-        this.Comms.open();
+        try {
+            this.Comms.open();
+            console.log("Porra");
+        } catch (err) {
+            console.log(`Error opening serial port: ${err.message}`);
+        }
     }
 
     async EnsureOpen() {
-        console.log("AAAAAAAAAAAAAAAAAAAAAAAAAA\n");
-        if (!this.Comms.isOpen) {
+        //console.log(".\n");
+        while (!this.Comms.isOpen) {
             if (this.OpenErrorIndex <= this.OpenErrorMargin) {
                 this.OpenErrorIndex += 1;
                 await this.begin();
+
+                while (this.Comms.opening) {}
+                
+                console.log("FUCK");
+
                 return;
             }
 
+            //console.error("Fuck");
             throw new Error("Serial port is not open");
         }
     }
@@ -70,7 +83,6 @@ class Comms extends EventEmitter {
     async ReadUntilDelimiter() {
         var Data = [];
         var Frag = "";
-        var c = null;
 
         function _pushFrag() {
             Frag = Frag.trim();
@@ -83,7 +95,7 @@ class Comms extends EventEmitter {
         }
 
         function _process() {
-            c = this.buf.shift();
+            var c = this.buf.shift();
 
             if (c == '\n' || c == ';') {
                 _pushFrag();
