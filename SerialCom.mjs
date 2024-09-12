@@ -23,16 +23,18 @@ class Comms extends EventEmitter {
             for (let i = 0; i < data.length; i++) {
                 const char = data[i];
                 this.buf.push(char);
-                console.log(`Recieved: ${String.fromCharCode}`)
+                console.log(`Recieved: ${String.fromCharCode(char)}`)
             }
         });
     }
 
     async begin() {
+        console.log("Porra");
         this.Comms.open();
     }
 
     async EnsureOpen() {
+        console.log("AAAAAAAAAAAAAAAAAAAAAAAAAA\n");
         if (!this.Comms.isOpen) {
             if (this.OpenErrorIndex <= this.OpenErrorMargin) {
                 this.OpenErrorIndex += 1;
@@ -55,7 +57,10 @@ class Comms extends EventEmitter {
     }
 
     async ReadIfAvailable() {
+        this.EnsureOpen();
+
         if (this.buf.length > 0) {
+            console.log("CU");
             return this.ReadUntilDelimiter();
         }
 
@@ -78,7 +83,7 @@ class Comms extends EventEmitter {
         }
 
         function _process() {
-            c = buf.shift();
+            c = this.buf.shift();
 
             if (c == '\n' || c == ';') {
                 _pushFrag();

@@ -1,15 +1,20 @@
 import Comms from "./SerialCom.mjs";
 
-let com = new Comms("COM4", 9600, 50);
+const com = new Comms("Cfsdfdsf", 9600);
 
 console.log("Logging.")
 
 await com.EnsureOpen();
 
-while (true) {
-    var data = await com.ReadIfAvailable();
+try {
+    while (true) {
+        var data = await com.ReadIfAvailable();
 
-    if (data) {
-        console.log(data);
+        if (data) {
+            console.log(data);
+        }
     }
+}
+catch (err) {
+    console.error(`FUCK: ${err}`);
 }
