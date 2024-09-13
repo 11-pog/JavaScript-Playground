@@ -1,6 +1,6 @@
 import Comms from "./SerialCom.mjs";
 
-const Serial = new Comms("COM3", 9600);
+const Serial = new Comms("COM4", 9600);
 
 Serial.on("CMM_DATA", async (data) => {
     console.log(data);
@@ -9,14 +9,6 @@ Serial.on("CMM_DATA", async (data) => {
 
 (async () => {
 
-    while (true) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        await Serial.Send("ON;");
-
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        await Serial.Send("OFF;");
-    }
+    
 
 })();
