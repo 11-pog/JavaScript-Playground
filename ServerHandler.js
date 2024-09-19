@@ -3,8 +3,6 @@ const path = require("path");
 let express = require('express');
 let fs = require('fs');
 
-
-
 const sitePath = path.join(__dirname, "Site");
 
 let arma = fs.readFileSync(path.join(sitePath, "armazenamento.html"), "utf-8");
