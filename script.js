@@ -5,6 +5,11 @@ client.subscribe("DHT_DATA:LEVEL");
 
 const decoder = new TextDecoder('utf-8');
 
+let levelReady = false;
+let humiReady = false;
+
+
+
 // Função para obter uma variável CSS
 function getCssVariable(variable) {
   return getComputedStyle(document.documentElement)
@@ -285,49 +290,51 @@ if (window.location.pathname.endsWith("tempo.html")) {
     removeOldData(Gráficonível);
   }
 
-  var levelReady = false;
-  var humiReady = false;
-
-  function ReconstructLevel(data)
-  {
+  function ReconstructLevel(data) {
     var keys = data.split(' ');
 
     for (let index = 1 /* <= On purpose */; index < keys.length; index++) {
       const element = keys[index];
-      
+
       getLevel(separateInfoQuery(element));
     }
   }
 
-  function ReconstructHumi(data)
-  {
+  function ReconstructHumi(data) {
     var keys = data.split(' ');
 
     for (let index = 1 /* <= On purpose */; index < keys.length; index++) {
       const element = keys[index];
-      
+
       getHumidity(separateInfoQuery(element));
     }
   }
 
-  client.publish("ESP_COMMAND", "GETGRAPHINFO");
+  const Handler = function (topic, message) {
+    var msgstr = decoder.decode(message);
 
-  while (!(levelReady && humiReady)) {
-    client.on("message", function (topic, message) {
-      var msgstr = decoder.decode(message);
+    if (topic == 'ESP_DATA' && msgstr.startsWith("ACK_LVL")) {
+      ReconstructLevel(msgstr)
+      levelReady = true;
+    }
+    else if (topic == 'ESP_DATA' && msgstr.startsWith("ACK_HUMI")) {
+      ReconstructHumi(msgstr);
+      humiReady = true;
+    }
 
-      if (topic == 'ESP_DATA' && msgstr.startsWith("ACK_LVL")) {
-        ReconstructLevel(msgstr)
-        levelReady = true;
-      }
-      else if(topic == 'ESP_DATA' && msgstr.startsWith("ACK_HUMI"))
-      {
-        ReconstructHumi(msgstr);
-        humiReady = true;
-      }
-    })
+    if (!(levelReady && humiReady)) {
+      client.off('message', Handler);
+    }
   }
 
+  // Initializes the graph
+  function RetrieveGraphInfo() {
+    client.publish("ESP_COMMAND", "GETGRAPHINFO");
+    client.on("message", Handler);
+  }
+
+
+  // Listener for regular updates for the graph
   client.on("message", function (topic, message) {
     var msgstr = decoder.decode(message)
     console.log(msgstr);
@@ -469,7 +476,7 @@ if (window.location.pathname.endsWith("tempo.html")) {
     }
   }
 
-
+  RetrieveGraphInfo();
 
 } else if (window.location.pathname.endsWith("visao.html")) {
 }
