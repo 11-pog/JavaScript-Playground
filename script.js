@@ -244,18 +244,16 @@ if (window.location.pathname.endsWith("tempo.html")) {
   }
 
   function separateInfoQuery(query) {
-    var words = query.split(' ');
+    var words = query.split('/');
+    var time = words[1].split(':')
 
-    if (words.length >= 8) {
+    if (words.length >= 3) {
       var result = {
         value: parseFloat(words[0]),
         datetime: {
-          year: parseInt(words[2]),
-          month: parseInt(words[3]),
-          day: parseInt(words[4]),
-          hour: parseInt(words[5]),
-          minute: parseInt(words[6]),
-          second: parseInt(words[7]),
+          hour: parseInt(time[0]),
+          minute: parseInt(time[1]),
+          second: parseInt(time[2])
         }
       }
 
@@ -266,7 +264,8 @@ if (window.location.pathname.endsWith("tempo.html")) {
   }
 
   function buildDate(datetime) {
-    return new Date(datetime.year, datetime.month, datetime.day, datetime.hour, datetime.minute, datetime.second);
+    const now = new Date()
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), datetime.minute, datetime.second);
   }
 
   // Função para atualizar as informações dos sensores
@@ -286,8 +285,51 @@ if (window.location.pathname.endsWith("tempo.html")) {
     removeOldData(Gráficonível);
   }
 
+  var levelReady = false;
+  var humiReady = false;
+
+  function ReconstructLevel(data)
+  {
+    var keys = data.split(' ');
+
+    for (let index = 1 /* <= On purpose */; index < keys.length; index++) {
+      const element = keys[index];
+      
+      getLevel(separateInfoQuery(element));
+    }
+  }
+
+  function ReconstructHumi(data)
+  {
+    var keys = data.split(' ');
+
+    for (let index = 1 /* <= On purpose */; index < keys.length; index++) {
+      const element = keys[index];
+      
+      getHumidity(separateInfoQuery(element));
+    }
+  }
+
+  client.publish("ESP_COMMAND", "GETGRAPHINFO");
+
+  while (!(levelReady && humiReady)) {
+    client.on("message", function (topic, message) {
+      var msgstr = decoder.decode(message);
+
+      if (topic == 'ESP_DATA' && msgstr.startsWith("ACK_LVL")) {
+        ReconstructLevel(msgstr)
+        levelReady = true;
+      }
+      else if(topic == 'ESP_DATA' && msgstr.startsWith("ACK_HUMI"))
+      {
+        ReconstructHumi(msgstr);
+        humiReady = true;
+      }
+    })
+  }
+
   client.on("message", function (topic, message) {
-    msgstr = decoder.decode(message)
+    var msgstr = decoder.decode(message)
     console.log(msgstr);
 
     if (topic === "DHT_DATA:HUMI") {
@@ -427,7 +469,7 @@ if (window.location.pathname.endsWith("tempo.html")) {
     }
   }
 
-  // Chamada inicial para atualizar os gráficos
-  // getLevel();
+
+
 } else if (window.location.pathname.endsWith("visao.html")) {
 }
