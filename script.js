@@ -1,3 +1,10 @@
+const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt')
+
+client.subscribe("DHT_DATA:HUMI");
+client.subscribe("DHT_DATA:LEVEL");
+
+const decoder = new TextDecoder('utf-8');
+
 // Função para obter uma variável CSS
 function getCssVariable(variable) {
   return getComputedStyle(document.documentElement)
@@ -236,20 +243,60 @@ if (window.location.pathname.endsWith("tempo.html")) {
     chart.update();
   }
 
+  function separateInfoQuery(query) {
+    var words = query.split(' ');
+
+    if (words.length >= 8) {
+      var result = {
+        value: parseFloat(words[0]),
+        datetime: {
+          year: parseInt(words[2]),
+          month: parseInt(words[3]),
+          day: parseInt(words[4]),
+          hour: parseInt(words[5]),
+          minute: parseInt(words[6]),
+          second: parseInt(words[7]),
+        }
+      }
+
+      return result;
+    }
+
+    return null;
+  }
+
+  function buildDate(datetime) {
+    return new Date(datetime.year, datetime.month, datetime.day, datetime.hour, datetime.minute, datetime.second);
+  }
+
   // Função para atualizar as informações dos sensores
-  function getHumidity(humiditySensorValue) {
-    document.getElementById("sensor-umidade").innerText =
-      humiditySensorValue + "%";
+  function getHumidity(info) {
+    document.getElementById("sensor-umidade").innerText = info.value + "%";
 
-    addData(Gráficoumidade, new Date(), humiditySensorValue);
+    addData(Gráficoumidade, buildDate(info.datetime), info.value);
+
+    removeOldData(Gráficoumidade);
   }
 
-  function getLevel(levelSensorValue) {
-    document.getElementById("sensor-nível").innerText = levelSensorValue + "%";
+  function getLevel(info) {
+    document.getElementById("sensor-nível").innerText = info.value + "%";
 
-    // Adicionar dados ao gráfico
-    addData(Gráficonível, new Date(), levelSensorValue);
+    addData(Gráficonível, buildDate(info.datetime), info.value);
+
+    removeOldData(Gráficonível);
   }
+
+  client.on("message", function (topic, message) {
+    msgstr = decoder.decode(message)
+    console.log(msgstr);
+
+    if (topic === "DHT_DATA:HUMI") {
+      getHumidity(separateInfoQuery(msgstr));
+    }
+    else if (topic === "DHT_DATA:LEVEL") {
+      getLevel(separateInfoQuery(msgstr));
+    }
+  })
 
   // Configuração do gráfico de Nível de Alimento
   const ctxLevel = document.getElementById("Gráficonível").getContext("2d");
@@ -369,12 +416,6 @@ if (window.location.pathname.endsWith("tempo.html")) {
     },
   });
 
-  // Atualiza as informações dos sensores e remove dados antigos a cada 5 segundos
-  setInterval(function () {
-    getLevel();
-    removeOldData(Gráficonível);
-    removeOldData(Gráficoumidade);
-  }, 5000);
 
   // Função para remover dados antigos do gráfico (manter no máximo 10 pontos)
   function removeOldData(chart) {
