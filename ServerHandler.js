@@ -3,10 +3,10 @@ const path = require("path");
 let express = require('express');
 let fs = require('fs');
 
-const sitePath = path.join(__dirname, "Site");
+const sitePath = path.join(__dirname, "site-com-contador");
 
-let arma = fs.readFileSync(path.join(sitePath, "armazenamento.html"), "utf-8");
 let index = fs.readFileSync(path.join(sitePath, "index.html"), "utf-8");
+let armazem = fs.readFileSync(path.join(sitePath, "armazenamento.html"), "utf-8");
 let tempo = fs.readFileSync(path.join(sitePath, "tempo.html"), "utf-8");
 let visao = fs.readFileSync(path.join(sitePath, "visao.html"), "utf-8");
 
@@ -14,7 +14,9 @@ let style = fs.readFileSync(path.join(sitePath, "css/style.css"), "utf-8");
 let it = fs.readFileSync(path.join(sitePath, "css/it.css"), "utf-8");
 let vc = fs.readFileSync(path.join(sitePath, "css/vc.css"), "utf-8");
 
-let script = fs.readFileSync(path.join(sitePath, "js/script.js"), "utf-8");
+let armazemJS = fs.readFileSync(path.join(sitePath, "js/armazenamento.js"), "utf-8");
+let tempoJS = fs.readFileSync(path.join(sitePath, "js/tempo.js"), "utf-8");
+let visaoJS = fs.readFileSync(path.join(sitePath, "js/visao.js"), "utf-8");
 
 const port = 45565;
 
@@ -37,7 +39,7 @@ app.get('/visao.html', (req, res) => {
 
 app.get('/armazenamento.html', (req, res) => {
   res.setHeader('Content-Type', 'text/html');
-  res.end(arma);
+  res.end(armazem);
 });
 
 
@@ -57,9 +59,19 @@ app.get('/css/vc.css', (req, res) => {
 });
 
 
-app.get('/js/script.js', (req, res) => {
+app.get('/js/armazenamento.js', (req, res) => {
   res.setHeader('Content-Type', 'application/javascript');
-  res.end(script);
+  res.end(armazemJS);
+});
+
+app.get('/js/tempo.js', (req, res) => {
+  res.setHeader('Content-Type', 'application/javascript');
+  res.end(tempoJS);
+});
+
+app.get('/js/visao.js', (req, res) => {
+  res.setHeader('Content-Type', 'application/javascript');
+  res.end(visaoJS);
 });
 
 
