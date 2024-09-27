@@ -15,5 +15,4 @@ function decodeID(id) {
 
 var pedro = decodeID(idtobeuncropressed);
 
-
 console.log("cheese")
